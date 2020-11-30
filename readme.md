@@ -6,5 +6,5 @@ Furthermore, the AGED package provides the user with a set of visualization func
 
 ## Install
 ```
-devtools::install_github("michael-sweeney/aged")
+devtools::install_github("rmoffitt/aged")
 ```
