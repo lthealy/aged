@@ -1,0 +1,84 @@
+---
+title: "AGED Vignette on TCGA"
+author: "Michael Sweeney, Luke Torre-Healy"
+date: "11/27/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = T, dev = "pdf")
+library(aged)
+library(NMF)
+library(ggpubr)
+```
+
+## Load TCGA expression matrix
+
+```{r cars}
+data("TCGA_PAAD")
+TCGA_PAAD$ex = TCGA_PAAD$ex[1:1000,]
+TCGA_PAAD$featInfo = TCGA_PAAD$featInfo[1:1000,]
+```
+
+## Prep for NMF
+
+First, for a trial run, trim your data so you aren't overloading your memory with computationally intensive NMF. Also, pre-normalize your data using VST or log if it is not already.
+
+```{r}
+df = as.matrix(TCGA_PAAD$ex)
+df = apply(df,2,as.integer)
+rownames(df) = TCGA_PAAD$featInfo$SYMBOL
+df = DESeq2::varianceStabilizingTransformation(df)
+```
+
+Next, estimate your ideal rank using the built in cophenetic correlation coefficient plot generator. The generator will highlight up to two key ranks: the maximum rank will be highlighted in red, and the rank directly before the steepest slope to the next rank (before the first positive slope is witnessed) will be highlighted in cyan. If both of these ranks are the same rank, it will be highlighted in purple. If the range of ranks you selected is not a consecutive set of numbers, only the maximum rank will be highlighted.
+
+```{r}
+cophenetic_generator(df, rank_range = 2:10, .options = 'p4')
+```
+
+## Run NMF using aged()
+
+The call to aged() will likely produce a variety of warnings regarding gene mappings. This is normal as not all genes will be able to be mapped perfectly. Such warnings are muted in this vignette.
+
+```{r pressure, warning=FALSE, error=FALSE, message=FALSE}
+x = aged::aged(data = df,
+               rank = 3,
+               .options = 'p4',
+               # transformation_type = 'vst',
+               category = "H",
+               gsea_barcodes = F)
+```
+
+## Visualize metagenes by gender in original dataset using violin_generator
+
+```{r}
+aged::violin_generator(aged_results = x,
+                 data = df,
+                 batch = TCGA_PAAD$sampInfo$Gender,
+                 var_axis = "Gender") 
+```
+
+## Visualize expression of specific gene by gender and race using the scatterplot generator
+
+```{r, fig.width = 9}
+aged::scatterplot_generator(aged_results = x,
+                      data = df,
+                      gene = "CPA1",
+                      y_axis = "wh",
+                      color = TCGA_PAAD$sampInfo$Gender,
+                      shape = TCGA_PAAD$sampInfo$Race,
+                      ellipse = FALSE)
+```
+
+## Visualize metagene expression by batch, treatment, decision, etc. using the heatmap generator
+
+```{r, fig.width = 9}
+aged::heatmap_generator(aged_results = x,
+                      data = df,
+                      samp_info = TCGA_PAAD$sampInfo,
+                      batches = c("Decision"),
+                      specific_order = c("Decision"))
+```
