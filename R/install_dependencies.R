@@ -17,7 +17,7 @@ if(!require(org.Hs.eg.db)){
   library(org.Hs.eg.db)
 }
 if(!require(clusterProfiler)){
-  install.packages("clusterProfiler")
+  BiocManager::install("clusterProfiler")
   library(clusterProfiler)
 }
 if(!require(dplyr)){
