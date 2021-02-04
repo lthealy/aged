@@ -31,7 +31,7 @@
 #' @import ggpubr
 #' @import DESeq2
 
-cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, nmf_seed = 123456, .options = "", .pbackend = "", colors = TRUE, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
+cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, nmf_seed = 123456, .options = "p4", .pbackend = "", colors = TRUE, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
   
   # Validate data
   if (is.null(rownames(data))) {
