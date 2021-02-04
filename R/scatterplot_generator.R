@@ -63,7 +63,6 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
   if (!any(row.names(data) == gene)) {
     stop(paste("No gene",gene,"was found inside of the dataset.", sep = " "))
   }
-  gene_row = data[gene,]
   lst <- vector()
   for (i in 1:rank) {
     w <- w[order(w[,i], decreasing = TRUE),]
