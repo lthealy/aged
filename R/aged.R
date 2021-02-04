@@ -54,7 +54,7 @@
 #' @import msigdbr
 #' @import DESeq2
 
-aged <- function(data, rank, n = 25, nrun = 30, nmf_seed = 123456, .options = "", .pbackend = "", species = "Homo sapiens", exponent = 0, gsea_barcodes = TRUE, max_geneset_size = 200, category = NULL, subcategory = NULL, input = "SYMBOL", n_max = 10, pval_cutoff = 0.05, nperm = 50000, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
+aged <- function(data, rank, n = 25, nrun = 30, nmf_seed = 123456, .options = "p4", .pbackend = "", species = "Homo sapiens", exponent = 0, gsea_barcodes = TRUE, max_geneset_size = 200, category = NULL, subcategory = NULL, input = "SYMBOL", n_max = 10, pval_cutoff = 0.05, nperm = 50000, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
    if (is.null(rownames(data))) {
       stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
    }
