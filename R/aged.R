@@ -55,23 +55,9 @@
 #' @import DESeq2
 
 aged <- function(data, rank, n = 25, nrun = 30, nmf_seed = 123456, .options = "p4", .pbackend = "", species = "Homo sapiens", exponent = 0, gsea_barcodes = TRUE, max_geneset_size = 200, category = NULL, subcategory = NULL, input = "SYMBOL", n_max = 10, pval_cutoff = 0.05, nperm = 50000, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
-   if (is.null(rownames(data))) {
-      stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
-   }
-   if (clear_low_variance == TRUE) {
-      print("Clearing low variance...")
-      data <- data[apply(data, 1, var) > 1,]
-   }
-   if (transformation_type == "vst") {
-      print("Applying a variance-stabilizing transformation...")
-      data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-      detach("package:DESeq2")
-      detach("package:SummarizedExperiment")
-      detach("package:DelayedArray")
-   } else if (transformation_type == "log") {
-      print("Applying a log transformation...")
-      data <- log1p(data)
-   }
+   
+   # verify and prepare data
+   data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
    
    print(paste("Performing NMF with rank ",rank,"...", sep = ""))
    if (.options == "" && .pbackend == "") {

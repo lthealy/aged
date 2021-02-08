@@ -10,7 +10,7 @@ aged(
   n = 25,
   nrun = 30,
   nmf_seed = 123456,
-  .options = "",
+  .options = "p4",
   .pbackend = "",
   species = "Homo sapiens",
   exponent = 0,

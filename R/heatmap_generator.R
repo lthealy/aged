@@ -51,28 +51,8 @@
 
 heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clear_low_variance = FALSE, transformation_type = "", blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
   
-  # Verify and prepare data
-  if (is.null(rownames(data))) {
-    stop("The data must have row names for AGED to run properly. Please verify that your data has proper row names before continuing.")
-  }
-  
-  # Clear low variance
-  if (clear_low_variance == TRUE) {
-    print("Clearing low variance...")
-    data <- data[apply(data, 1, var) > 1,]
-  }
-  
-  # Requested transformation
-  if (transformation_type == "vst") {
-    print("Applying a variance-stabilizing transformation...")
-    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
-  } else if (transformation_type == "log") {
-    print("Applying a log transformation...")
-    data <- log1p(data)
-  }
+  # verify and prepare data
+  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
   
   # Set up "featInfo"
   rank <- length(aged_results) - 2
@@ -98,13 +78,6 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
     no_var = which(apply(data,1,sd) == 0)
     if(length(no_var) != 0){
       data <- data[-no_var,]
-      df <- df[-no_var,]
-    }
-    
-    # Remove any samples with SD of 0 (can't cluster)
-    no_var = which(apply(data,2,sd) == 0)
-    if(length(no_var) != 0){
-      data <- data[,-no_var]
       df <- df[-no_var,]
     }
     

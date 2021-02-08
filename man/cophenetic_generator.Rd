@@ -9,7 +9,7 @@ cophenetic_generator(
   rank_range = 2:20,
   nrun = 12,
   nmf_seed = 123456,
-  .options = "",
+  .options = "p4",
   .pbackend = "",
   colors = TRUE,
   clear_low_variance = FALSE,

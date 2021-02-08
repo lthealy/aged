@@ -38,22 +38,8 @@
 
 scatterplot_generator <- function(aged_results, data, gene, clear_low_variance = FALSE, transformation_type = "", blind = TRUE, y_axis = "wh", color = NULL, shape = NULL, reg = TRUE, reg_color = "black", xy = TRUE, xy_color = "gray", ellipse = TRUE) {
   
-  # Validate data
-  if (is.null(rownames(data))) {
-    stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
-  }
-  
-  # Perform desired transformation
-  if (transformation_type == "vst") {
-    print("Applying a variance-stabilizing transformation...")
-    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
-  } else if (transformation_type == "log") {
-    print("Applying a log transformation...")
-    data <- log1p(data)
-  }
+  # verify and prepare data
+  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
   
   # Pull NMF results and find proper metagene for selected gene
   rank <- length(aged_results) - 2
