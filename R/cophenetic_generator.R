@@ -33,28 +33,8 @@
 
 cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, nmf_seed = 123456, .options = "p4", .pbackend = "", colors = TRUE, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
   
-  # Validate data
-  if (is.null(rownames(data))) {
-    stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
-  }
-  
-  # Clear low variance if desired
-  if (clear_low_variance == TRUE) {
-    print("Clearing low variance...")
-    data <- data[apply(data, 1, var) > 1,]
-  }
-  
-  # Perform desired transformation
-  if (transformation_type == "vst") {
-    print("Applying a variance-stabilizing transformation...")
-    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
-  } else if (transformation_type == "log") {
-    print("Applying a log transformation...")
-    data <- log1p(data)
-  }
+  # verify and prepare data
+  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
   
   # Perform NMF
   if (.options == "" && .pbackend == "") {
