@@ -1,6 +1,6 @@
 #' Install Package Dependencies
 #'
-#' This script will install all R packages required in the \code{AGED} package.
+#' This script will install all R packages required in the \code{AGED} package. Make sure that BiocManager is installed before running this script.
 #' 
 #' @export
 
@@ -8,28 +8,12 @@ if(!require(NMF)){
   install.packages("NMF")
   library(NMF)
 }
-if(!require(org.Mm.eg.db)){
-  BiocManager::install("org.Mm.eg.db")
-  library(org.Mm.eg.db)
-}
-if(!require(org.Hs.eg.db)){
-  BiocManager::install("org.Hs.eg.db")
-  library(org.Hs.eg.db)
-}
-if(!require(clusterProfiler)){
-  BiocManager::install("clusterProfiler")
-  library(clusterProfiler)
-}
 if(!require(dplyr)){
   install.packages("dplyr")
   library(dplyr)
 }
-if(!require(msigdbr)){
-  install.packages("msigdbr")
-  library(msigdbr)
-}
 if(!require(DESeq2)){
-  BiocManager::install("DESeq2")
+  install.packages("DESeq2")
   library(DESeq2)
 }
 if(!require(ggplot2)){

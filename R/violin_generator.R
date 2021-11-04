@@ -35,15 +35,30 @@
 #' @import DESeq2
 
 violin_generator <- function(aged_results, data, batch, batch_order = names(table(batch)), var_axis = "treatment", clear_low_variance = F, transformation_type = "", blind = TRUE, nrow = 2, scales_free = "fixed", beeswarm_size = 1, beeswarm_color = "black") {
+  if (is.null(rownames(data))) {
+    stop("The data must have row names for AGED to run properly. Please verify that your data has proper row names before continuing.")
+  }
+  if (clear_low_variance == TRUE) {
+    print("Clearing low variance...")
+    data <- data[apply(data, 1, var) > 1,]
+  }
+  if (transformation_type == "vst") {
+    print("Applying a variance-stabilizing transformation...")
+    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
+    detach("package:DESeq2")
+    detach("package:SummarizedExperiment")
+    detach("package:DelayedArray")
+  } else if (transformation_type == "log") {
+    print("Applying a log transformation...")
+    data <- log1p(data)
+  }
   
-  # verify and prepare data
-  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
-  
-  rank <- length(aged_results) - 2
+  rank <- length(aged_results) - 1
   n <- length(aged_results[[1]][[1]])
   for (i in 1:rank) {
     n <- max(length(aged_results[[i]][[1]]))
   }
+  rank_string <- paste("rank",rank,"_ibd",sep="")
   batches <- table(batch)
   for (i in 1:length(batches)) {
     df <- data.frame(matrix(ncol=3,nrow=(rank*unname(batches[i]))))
@@ -74,6 +89,9 @@ violin_generator <- function(aged_results, data, batch, batch_order = names(tabl
   treatment_matrix$treatment <- factor(treatment_matrix$treatment, levels = batch_order)
   label_maker <- function(string, prefix = "Metagene ") paste(prefix, string)
   g <- ggplot(data = treatment_matrix, aes(x = treatment, y = score)) +
+    theme_classic() +
+    theme(legend.position = "None") +
+    scale_fill_brewer(palette = "Set1") +
     geom_violin(aes(fill = treatment)) +
     xlab(var_axis) +
     coord_flip() +
@@ -82,4 +100,9 @@ violin_generator <- function(aged_results, data, batch, batch_order = names(tabl
     geom_beeswarm(aes(x = treatment), size = beeswarm_size, color = beeswarm_color) +
     guides(fill=guide_legend(title=var_axis))
   return(g)
+  
+  metagene_labeller <- function(string) {
+    print(string)
+    return(paste("Metagene",string,sep=" "))
+  }
 }

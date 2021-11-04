@@ -1,6 +1,6 @@
 #' Cophenetic Correlation Coefficient Plot Generator
 #'
-#' \code{cophenetic_generator} will run non-negative matrix factorization to determine the cophenetic correlation coefficient for each rank of factorization in a desired range of ranks decided by the user. The cophenetic correlation coefficient can be helpful for the user in deciding what rank to use when running NMF. The raw cophenetic correlation coefficient value, the elbow method, or any other applicable approach can help determine a desirable rank for NMF. The higher the cophenetic correlation coefficient is, the more stable and reproducible the NMF results are. In the plot returned by this graph, the rank with the highest cophenetic correlation coefficient will be highlighted in red. If the input vector for \code{rank_range} is continuous, the rank directly before the biggest drop in cophenetic correlation coefficient, before any positive slopes, will be highlighted in cyan. If these two points are the same, the point will be highlighted in magenta. In the extremely rare event of a tie in numerical values, the first index is selected. However, it is ultimately up to the user to decide what rank is best fit for NMF runs. 
+#' \code{cophenetic_generator} will run non-negative matrix factorization (NMF) to determine the cophenetic correlation coefficient for each rank of factorization in a desired range of ranks decided by the user. The cophenetic correlation coefficient can be helpful for the user in deciding what rank to use when running NMF. The raw cophenetic correlation coefficient value, the elbow method, or any other applicable approach can help determine a desirable rank for NMF. The higher the cophenetic correlation coefficient is, the more stable and reproducible the NMF results are. In the plot returned by this graph, the rank with the highest cophenetic correlation coefficient will be highlighted in red. If the input vector for \code{rank_range} is continuous, the rank directly before the biggest drop in cophenetic correlation coefficient, before any positive slopes, will be highlighted in cyan. If these two points are the same, the point will be highlighted in magenta. In the extremely rare event of a tie in numerical values, the first index is selected. However, it is ultimately up to the user to decide what rank is best fit for NMF runs. 
 #' 
 #' @param data Gene expression target data, a matrix-like object. The rows should represent genes, and each row must have a unique row name. Each column should represent a different sample.
 #' 
@@ -8,17 +8,17 @@
 #' 
 #' @param nrun The desired number of NMF runs. For simply determing the cohpenetic correlation coefficient for each rank, it is not entirely necessary to perform a high number of runs or as many runs as normal when running NMF. This function defaults to 12, but any number of runs can be used.
 #' 
+#' @param mvg A numerical argument determining how many of the most variable genes to look at during the first steps of FaStaNMF.
+#' 
 #' @param nmf_seed The desired seed to be used for NMF
 #' 
-#' @param .options This argument is used to set runtime options. See \link[NMF]{nmf} for detailed information.
-#' 
-#' @param .pbackend This argument is used in accordance with the .options parameter. See \link[NMF]{nmf} for detailed information.
+#' @param cophenetic A boolean argument determining whether the cophenetic correlation coefficient of the dataset should be used, or the number of genes that cluster stably at different rank values.
 #' 
 #' @param colors A boolean argument determining whether or not the specified points in the documentation (maximum value, point preceding the largest drop) should be highlighted in color. If TRUE, the points will be highlighted. If false, no points will be highlighted.
 #' 
-#' @param clear_low_variance A boolean variable that determines whether or not rows with variance less than 1 should be removed from the original dataset.
+#' @param clv A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.
 #' 
-#' @param transformation_type A string variable that determines whether or not a log or VST transformation should be done on the original dataset. If this argument is intended to be used to perform a transformation, it should be "vst" or "log" only.
+#' @param transformation A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.
 #' 
 #' @param blind If a VST is to be done, this boolean value determines whether it is blind or not.
 #'
@@ -31,24 +31,44 @@
 #' @import ggpubr
 #' @import DESeq2
 
-cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, nmf_seed = 123456, .options = "p4", .pbackend = "", colors = TRUE, clear_low_variance = FALSE, transformation_type = "", blind = TRUE) {
+cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, mvg = 1000, nmf_seed = 123456, cophenetic = TRUE, colors = TRUE, clv = 0, transformation = 0, blind = TRUE, ...) {
   
-  # verify and prepare data
-  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
-  
-  # Perform NMF
-  if (.options == "" && .pbackend == "") {
-    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed)
-  } else if (.options != "" && .pbackend == "") {
-    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed, .options = .options)
-  } else if (.options == "" && .pbackend != "") {
-    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed, .pbackend = .pbackend)
-  } else {
-    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed, .options= .options, .pbackend = .pbackend)
+  # Validate data
+  if (is.null(rownames(data))) {
+    stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
   }
   
+  # Clear low variance if desired
+  if (clv != 0) {
+    print("Clearing low variance...")
+    data <- data[apply(data, 1, var) > clv,]
+  }
+  
+  # Perform desired transformation
+  if (transformation == 2) {
+    print("Applying a variance-stabilizing transformation...")
+    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
+    detach("package:DESeq2")
+    detach("package:SummarizedExperiment")
+    detach("package:DelayedArray")
+  } else if (transformation == 1) {
+    print("Applying a log transformation...")
+    data <- log1p(data)
+  }
+  
+  plot_values <- vector()
+  # Perform NMF
+  if (cophenetic == TRUE) {
+    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed, ...)
+    plot_values <- nmf_results$measures$cophenetic
+  } else {
+    for (i in 1:length(rank_range)) {
+      val <- FaStaNMF::fastanmf(data = data, rank = rank_range[i], nrun = nrun, mvg = mvg, nmf_seed = nmf_seed, cophenetic = TRUE, ...)
+      plot_values <- c(plot_values, val)
+    }
+  }
   # Pull NMF results to create CCC plot
-  df2 <- as.data.frame(cbind(nmf_results$measures$cophenetic, rank_range))
+  df2 <- as.data.frame(cbind(plot_values, rank_range))
   colnames(df2) = c("cophenetic", "rank")
   if (colors == FALSE) {
     p <- ggplot(data = df2, aes(x = rank, y = cophenetic)) + xlab("Rank") + ylab("Cophenetic Correlation Coefficient") + ggtitle("Cophenetic Correlation Coefficient Plot") + geom_line() + geom_point() + theme_pubr()

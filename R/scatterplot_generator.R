@@ -14,7 +14,7 @@
 #' 
 #' @param blind If a VST is to be done, this boolean value determines whether it is blind or not.
 #' 
-#' @param y_axis A string value representing what data should be plotted. The value should be one of: "h" or "wh" only.
+#' @param x_axis A string value representing what data should be plotted. The value should be one of: "h" or "wh" only.
 #' 
 #' @param color A string vector representation of size \code{n} where \code{n} equals the number of samples. This vector should detail how each sample should be categorized and colored within each scatterplot. Using a column from a dataset's sample information dataframe is common. For example, one might want to separate points in the scatterplots by treatment or batch. Each treatment, batch, or category will be represented by a different color.
 #' 
@@ -36,19 +36,34 @@
 #' @import ggplot2
 #' @import ggbeeswarm
 
-scatterplot_generator <- function(aged_results, data, gene, clear_low_variance = FALSE, transformation_type = "", blind = TRUE, y_axis = "wh", color = NULL, shape = NULL, reg = TRUE, reg_color = "black", xy = TRUE, xy_color = "gray", ellipse = TRUE) {
+scatterplot_generator <- function(aged_results, data, gene, clear_low_variance = FALSE, transformation_type = "", blind = TRUE, x_axis = "wh", color = NULL, shape = NULL, reg = TRUE, reg_color = "black", xy = TRUE, xy_color = "gray", ellipse = TRUE) {
   
-  # verify and prepare data
-  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
+  # Validate data
+  if (is.null(rownames(data))) {
+    stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
+  }
+  
+  # Perform desired transformation
+  if (transformation_type == "vst") {
+    print("Applying a variance-stabilizing transformation...")
+    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
+    detach("package:DESeq2")
+    detach("package:SummarizedExperiment")
+    detach("package:DelayedArray")
+  } else if (transformation_type == "log") {
+    print("Applying a log transformation...")
+    data <- log1p(data)
+  }
   
   # Pull NMF results and find proper metagene for selected gene
-  rank <- length(aged_results) - 2
+  rank <- length(aged_results) - 1
   w <- aged_results$w
   h <- aged_results$h
   wh <- (aged_results$w %*% aged_results$h)
   if (!any(row.names(data) == gene)) {
     stop(paste("No gene",gene,"was found inside of the dataset.", sep = " "))
   }
+  gene_row = data[gene,]
   lst <- vector()
   for (i in 1:rank) {
     w <- w[order(w[,i], decreasing = TRUE),]
@@ -61,18 +76,19 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
   min_index <- which(lst==min(lst))
   df2 <- as.numeric(data[gene,])
   x_lab = ""
-  if (y_axis == "h") {
+  if (x_axis == "h") {
     df2 <- rbind(df2, as.numeric(h[min_index,]))
     x_lab = paste(gene,"Values, H Matrix, Metagene",min_index, sep = " ")
-  } else if (y_axis == "wh") {
+  } else if (x_axis == "wh") {
     df2 <- rbind(df2, as.numeric(wh[gene,]))
-    x_lab = paste(gene,"Values, W * H Matrix", sep = " ")
+    x_lab = paste(gene,"Values, W * H Matrix (Expected Values)", sep = " ")
   } else {
-    stop("The y_axis parameter must be one of \"h\" or \"wh\" only.")
+    stop("The x_axis parameter must be one of \"h\" or \"wh\" only.")
   }
   df2 <- t(df2)
   df2 <- as.data.frame(df2)
   colnames(df2) <- c("original", "chosen")
+  return(df2)
   g <- qplot(x = chosen, y = original, data = df2, xlab = x_lab, ylab = paste(gene,"Values, Original Dataset", sep = " "), shape = shape, color = color, geom = c("point")) + theme_pubr()
   if (reg == TRUE) {
     g <- g + geom_smooth(color = reg_color, method='lm', formula=y~x, aes(group = 1), se = FALSE)

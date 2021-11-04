@@ -21,6 +21,8 @@
 #' @param specific_order A vector of strings representing how the sample tracks (columns) should be sorted. Each element of this vector should represent a column name in \code{batches}. The sample tracks will be nested sorted by the first element first, then the second element, etc. 
 #' 
 #' @param legend A boolean value indicating whether or not a legend should be plotted alongside the heatmap. WARNING: Adding a row dendrogram will interfere with the legend if plotted concurrently.
+#' 
+#' @param hmap_color A string value or a vector of string values indicating the color(s) for the heatmap's scale. Low values on the scale are indicated by the first value in the vector, and high values on the scale will be indicated by the last value in the vector. Intermediate value(s) will be the color(s) indicated by this string or vector value.
 #'
 #' @param dendrogram A character string indicating whether to draw "none", "row", "column" or "both" dendrograms on the heatmap. Defaults to "column". This argument should only be one of these strings. WARNING: Adding a row dendrogram will interfere with the legend if plotted concurrently.
 #' 
@@ -49,13 +51,33 @@
 #' @import DESeq2
 #' @import bioDist
 
-heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clear_low_variance = FALSE, transformation_type = "", blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
+heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clear_low_variance = FALSE, transformation_type = "", blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, hmap_color = "skyblue", dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
   
-  # verify and prepare data
-  data <- aged::verify_and_transform_data(data,clear_low_variance = clear_low_variance, transformation_type = transformation_type, blind = blind)
+  # Verify and prepare data
+  if (is.null(rownames(data))) {
+    stop("The data must have row names for AGED to run properly. Please verify that your data has proper row names before continuing.")
+  }
+  
+  # Clear low variance
+  if (clear_low_variance == TRUE) {
+    print("Clearing low variance...")
+    data <- data[apply(data, 1, var) > 1,]
+  }
+  
+  # Requested transformation
+  if (transformation_type == "vst") {
+    print("Applying a variance-stabilizing transformation...")
+    data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
+    detach("package:DESeq2")
+    detach("package:SummarizedExperiment")
+    detach("package:DelayedArray")
+  } else if (transformation_type == "log") {
+    print("Applying a log transformation...")
+    data <- log1p(data)
+  }
   
   # Set up "featInfo"
-  rank <- length(aged_results) - 2
+  rank <- length(aged_results) - 1
   rn <- row.names(data)
   df <- data.frame(matrix(ncol=2,nrow=length(rn)))
   df[,1] <- rn
@@ -81,6 +103,13 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
       df <- df[-no_var,]
     }
     
+    # Remove any samples with SD of 0 (can't cluster)
+    no_var = which(apply(data,2,sd) == 0)
+    if(length(no_var) != 0){
+      data <- data[,-no_var]
+      df <- df[-no_var,]
+    }
+    
     # Prepare colors
     colorlists <- rep(list(c("gray94", "blue", "green",
                              "yellow", "orange", "red","black")),
@@ -103,6 +132,9 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
     # Adjusts track (column) sorting depending on user preference
     if (!is.null(specific_order)) {
       specific_order <- paste(specific_order, collapse = ", ")
+      if (grepl(":", specific_order, fixed = TRUE) == TRUE) {
+        specific_order = paste('\`', specific_order, '\`', sep = "")
+      }
       sampleOrder <- with(samp_info, eval(parse(text = paste("order(", specific_order, ")"))))
       Colv <- aged::convert_order_to_dendrogram(sampleOrder)
     } else {
@@ -117,6 +149,10 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
       Rowv <- aged::convert_order_to_dendrogram(geneOrder)
     }
     
+    if (length(hmap_color) > 1) {
+      hmap_color = unlist(hmap_color)
+    }
+    
     # Establishes default values
     l <- list(...)
     if (is.null(l$Colv)) l$Colv <- Colv
@@ -125,7 +161,7 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
     if (is.null(l$trace)) l$trace <- trace
     if (is.null(l$scale)) l$scale <- scale
     if (is.null(l$labRow)) l$labRow <- NA
-    if (is.null(l$col)) l$col <- colorRampPalette(c("blue","white","red"))(n = 299)
+    if (is.null(l$col)) l$col <- colorRampPalette(c(hmap_color))(n = 299)
     if (is.null(l$ColSideColors)) l$ColSideColors <- ColSideColors$SideColors
     if (is.null(l$ColSideColorsSize)) l$ColSideColorsSize <- dim(ColSideColors$SideColors)[2]*1.2
     if (is.null(l$RowSideColors)) l$RowSideColors <- t(RowSideColors$SideColors)
@@ -134,6 +170,7 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
     if (is.null(l$key)) l$key <- key
     if (is.null(l$lhei)) l$lhei <- lhei
     if (is.null(l$lhei)) l$lwid <- lwid
+    breaks <- (((0:299)/299)-0.5)*4
     
     # Plots heatmap
     aged::heatmap.3(x = data,
@@ -152,6 +189,7 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
                     key = l$key,
                     lhei = l$lhei,
                     lwid = l$lwid,
+                    breaks = breaks,
                     ...)
     if (legend == TRUE) {
       legend(xy.coords(x=0,y=1),

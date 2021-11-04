@@ -11,7 +11,7 @@ scatterplot_generator(
   clear_low_variance = FALSE,
   transformation_type = "",
   blind = TRUE,
-  y_axis = "wh",
+  x_axis = "wh",
   color = NULL,
   shape = NULL,
   reg = TRUE,
@@ -34,7 +34,7 @@ scatterplot_generator(
 
 \item{blind}{If a VST is to be done, this boolean value determines whether it is blind or not.}
 
-\item{y_axis}{A string value representing what data should be plotted. The value should be one of: "h" or "wh" only.}
+\item{x_axis}{A string value representing what data should be plotted. The value should be one of: "h" or "wh" only.}
 
 \item{color}{A string vector representation of size \code{n} where \code{n} equals the number of samples. This vector should detail how each sample should be categorized and colored within each scatterplot. Using a column from a dataset's sample information dataframe is common. For example, one might want to separate points in the scatterplots by treatment or batch. Each treatment, batch, or category will be represented by a different color.}
 

@@ -15,6 +15,7 @@ heatmap_generator(
   pearson = FALSE,
   specific_order = NULL,
   legend = TRUE,
+  hmap_color = "skyblue",
   dendrogram = "none",
   trace = "none",
   scale = "row",
@@ -47,6 +48,8 @@ heatmap_generator(
 \item{specific_order}{A vector of strings representing how the sample tracks (columns) should be sorted. Each element of this vector should represent a column name in \code{batches}. The sample tracks will be nested sorted by the first element first, then the second element, etc.}
 
 \item{legend}{A boolean value indicating whether or not a legend should be plotted alongside the heatmap. WARNING: Adding a row dendrogram will interfere with the legend if plotted concurrently.}
+
+\item{hmap_color}{A string value or a vector of string values indicating the color(s) for the heatmap's scale. Low values on the scale are indicated by the first value in the vector, and high values on the scale will be indicated by the last value in the vector. Intermediate value(s) will be the color(s) indicated by this string or vector value.}
 
 \item{dendrogram}{A character string indicating whether to draw "none", "row", "column" or "both" dendrograms on the heatmap. Defaults to "column". This argument should only be one of these strings. WARNING: Adding a row dendrogram will interfere with the legend if plotted concurrently.}
 

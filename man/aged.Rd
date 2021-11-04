@@ -2,75 +2,45 @@
 % Please edit documentation in R/aged.R
 \name{aged}
 \alias{aged}
-\title{Automatic Gene Expression Deconvolution}
+\title{Automatic Gene Expression Deconvolution Using FaStaNMF}
 \usage{
 aged(
   data,
   rank,
   n = 25,
-  nrun = 30,
+  nrun = 200,
   nmf_seed = 123456,
-  .options = "p4",
-  .pbackend = "",
-  species = "Homo sapiens",
-  exponent = 0,
-  gsea_barcodes = TRUE,
-  max_geneset_size = 200,
-  category = NULL,
-  subcategory = NULL,
-  input = "SYMBOL",
-  n_max = 10,
-  pval_cutoff = 0.05,
-  nperm = 50000,
-  clear_low_variance = FALSE,
-  transformation_type = "",
-  blind = TRUE
+  mvg = 1000,
+  clv = 0,
+  transformation = 0,
+  blind = TRUE,
+  ...
 )
 }
 \arguments{
 \item{data}{Gene expression target data, a matrix-like object. The rows should represent genes, and each row must have a unique row name. Each column should represent a different sample.}
 
-\item{rank}{The factorization rank (number of factors) to be used during NMF. This function argument should usually be a positive integer value.}
+\item{rank}{The factorization rank (number of factors) to be used during NMF. This function argument should be a positive integer value.}
 
 \item{n}{The number of barcode genes desired per metagene}
 
-\item{nrun}{The desired number of NMF runs}
+\item{nrun}{The desired number of NMF runs to be run on the initially reduced dataset.}
 
-\item{nmf_seed}{The desired seed to be used for NMF}
+\item{nmf_seed}{The desired seed to be used for NMF on the initially reduced dataset.}
 
-\item{.options}{This argument is used to set runtime options. See \link[NMF]{nmf} for detailed information.}
+\item{mvg}{A numerical argument determining how many of the most variable genes to look at during the first steps of FaStaNMF.}
 
-\item{.pbackend}{This argument is used in accordance with the .options parameter. See \link[NMF]{nmf} for detailed information.}
+\item{clv}{A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.}
 
-\item{species}{The species corresponding to the dataset (human, mouse, etc.).}
+\item{transformation}{A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.}
 
-\item{exponent}{The weight of each step between differentially-ranked genes in GSEA.}
+\item{blind}{If a VST is to be done using the \code{transformation} parameter, this boolean value determines whether it is blind or not.}
 
-\item{gsea_barcodes}{A boolean value that determines which values are passed to GSEA. If \code{TRUE}, only the barcode genes and their corresponding numerical values will be used as input for GSEA for each metagene. If \code{FALSE}, all genes and their corresponding numeric values will be input into GSEA for each metagene.}
-
-\item{max_geneset_size}{The maximum number of genes in potential gene sets in gene set enrichment analysis.}
-
-\item{category}{MSigDB collection abbreviation, such as H, C1, C2, C3, C4, C5, C6, C7.}
-
-\item{subcategory}{MSigDB sub-collection abbreviation, such as CGP or BP.}
-
-\item{input}{The input type for gene names such as Entrez, Ensembl, etc.}
-
-\item{n_max}{Maximum number of plots to return.}
-
-\item{pval_cutoff}{The p-value cutoff for which GSEA results are to be considered statistically significant.}
-
-\item{nperm}{The number of permutations to be performed by gene set enrichment analysis.}
-
-\item{clear_low_variance}{A boolean variable that determines whether rows with var < 1 are removed or not. This is done before any type of transformation is performed.}
-
-\item{transformation_type}{A string variable that determines whether or not a log or VST transformation should be done on the original dataset. If this argument is used, it should be "vst" or "log" only. If no transformation is to be performed, the default value or any string other than "vst" or "log" can be used. For NMF, untransformed data should be log-transformed or VST-transformed.}
-
-\item{blind}{If a VST is to be done, this boolean value determines whether it is blind or not.}
+\item{...}{Other arguments to be passed to FaStaNMF.}
 }
 \value{
-A list containing barcode genes for each metagene, gene set enrichment analysis results for each metagene, and the raw W and H matrix returned by NMF.
+A list containing barcode genes for each metagene, and the raw W and H matrix returned by FaStaNMF.
 }
 \description{
-\code{AGED} will perform gene expression deconvolution on a matrix or data frame of gene counts using non-negative matrix factorization. The results of the gene expression deconvolution will then be interpreted using GSEA.
+\code{AGED} will perform gene expression deconvolution on a matrix or data frame of gene expression data using FaStaNMF.
 }
