@@ -1,9 +1,12 @@
 #' Install Package Dependencies
 #'
-#' This script will install all R packages required in the \code{AGED} package. Make sure that BiocManager is installed before running this script.
+#' This script will install all R packages required in the \code{AGED} package.
 #' 
 #' @export
-
+if(!require(BiocManager)){
+  install.packages("BiocManager")
+  library(BiocManager)
+}
 if(!require(NMF)){
   install.packages("NMF")
   library(NMF)
@@ -11,10 +14,6 @@ if(!require(NMF)){
 if(!require(dplyr)){
   install.packages("dplyr")
   library(dplyr)
-}
-if(!require(DESeq2)){
-  install.packages("DESeq2")
-  library(DESeq2)
 }
 if(!require(ggplot2)){
   install.packages("ggplot2")
@@ -47,4 +46,8 @@ if(!require(GEOquery)){
 if(!require(readr)){
   install.packages("readr")
   library(readr)
+}
+if(!require(DESeq2)){
+  BiocManager::install("DESeq2")
+  library(DESeq2)
 }
