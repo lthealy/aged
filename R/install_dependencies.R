@@ -1,8 +1,7 @@
 #' Install Package Dependencies
 #'
 #' This script will install all R packages required in the \code{AGED} package.
-#' 
-#' @export
+
 if(!require(BiocManager)){
   install.packages("BiocManager")
   library(BiocManager)
