@@ -1,52 +1,52 @@
-#' Install Package Dependencies
-#'
-#' This script will install all R packages required in the \code{AGED} package.
-
-if(!require(BiocManager)){
-  install.packages("BiocManager")
-  library(BiocManager)
-}
-if(!require(NMF)){
-  install.packages("NMF")
-  library(NMF)
-}
-if(!require(dplyr)){
-  install.packages("dplyr")
-  library(dplyr)
-}
-if(!require(ggplot2)){
-  install.packages("ggplot2")
-  library(ggplot2)
-}
-if(!require(ggbeeswarm)){
-  install.packages("ggbeeswarm")
-  library(ggbeeswarm)
-}
-if(!require(ggpubr)){
-  install.packages("ggpubr")
-  library(ggpubr)
-}
-if(!require(RColorBrewer)){
-  install.packages("RColorBrewer")
-  library(RColorBrewer)
-}
-if(!require(scales)){
-  install.packages("scales")
-  library(scales)
-}
-if(!require(bioDist)){
-  BiocManager::install("bioDist")
-  library(bioDist)
-}
-if(!require(GEOquery)){
-  BiocManager::install("GEOquery")
-  library(GEOquery)
-}
-if(!require(readr)){
-  install.packages("readr")
-  library(readr)
-}
-if(!require(DESeq2)){
-  BiocManager::install("DESeq2")
-  library(DESeq2)
-}
+#' #' Install Package Dependencies
+#' #'
+#' #' This script will install all R packages required in the \code{AGED} package.
+#' 
+#' if(!require(BiocManager)){
+#'   install.packages("BiocManager")
+#'   library(BiocManager)
+#' }
+#' if(!require(NMF)){
+#'   install.packages("NMF")
+#'   library(NMF)
+#' }
+#' if(!require(dplyr)){
+#'   install.packages("dplyr")
+#'   library(dplyr)
+#' }
+#' if(!require(ggplot2)){
+#'   install.packages("ggplot2")
+#'   library(ggplot2)
+#' }
+#' if(!require(ggbeeswarm)){
+#'   install.packages("ggbeeswarm")
+#'   library(ggbeeswarm)
+#' }
+#' if(!require(ggpubr)){
+#'   install.packages("ggpubr")
+#'   library(ggpubr)
+#' }
+#' if(!require(RColorBrewer)){
+#'   install.packages("RColorBrewer")
+#'   library(RColorBrewer)
+#' }
+#' if(!require(scales)){
+#'   install.packages("scales")
+#'   library(scales)
+#' }
+#' if(!require(bioDist)){
+#'   BiocManager::install("bioDist")
+#'   library(bioDist)
+#' }
+#' if(!require(GEOquery)){
+#'   BiocManager::install("GEOquery")
+#'   library(GEOquery)
+#' }
+#' if(!require(readr)){
+#'   install.packages("readr")
+#'   library(readr)
+#' }
+#' if(!require(DESeq2)){
+#'   BiocManager::install("DESeq2")
+#'   library(DESeq2)
+#' }
