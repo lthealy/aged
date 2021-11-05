@@ -1,4 +1,4 @@
-#' Transform Data
+#' Transform Data (DEPRECATED, FUNCTIONALITY BUILT IN TO AGED.R ARGS)
 #'
 #' \code{verify_and_transform_data} is a helper function used in multiple core functions to check input, clear low variance and apply log or variance stabilizing transformation.
 #'
