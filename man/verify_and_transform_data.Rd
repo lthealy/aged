@@ -2,7 +2,7 @@
 % Please edit documentation in R/verify_and_transform_data.R
 \name{verify_and_transform_data}
 \alias{verify_and_transform_data}
-\title{Transform Data}
+\title{Transform Data (DEPRECATED, FUNCTIONALITY BUILT IN TO AGED.R ARGS)}
 \usage{
 verify_and_transform_data(
   data,
