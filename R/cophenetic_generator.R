@@ -48,22 +48,31 @@ cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, mvg = 1000,
   if (transformation == 2) {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
+    if("DESeq2" %in% (.packages())){
+      detach("package:DESeq2", unload=TRUE) 
+    }
+    if("SummarizedExperiment" %in% (.packages())){
+      detach("package:SummarizedExperiment", unload=TRUE) 
+    }
+    if("DelayedArray" %in% (.packages())){
+      detach("package:DelayedArray", unload=TRUE) 
+    }
   } else if (transformation == 1) {
     print("Applying a log transformation...")
     data <- log1p(data)
   }
   
+  reduced_data <- data[order(rowVars(data), decreasing = TRUE),]
+  reduced_data <- (reduced_data[1:min(nrow(reduced_data), mvg),])
+  
   plot_values <- vector()
   # Perform NMF
   if (cophenetic == TRUE) {
-    nmf_results <- NMF::nmfEstimateRank(data, range = rank_range, nrun = nrun, seed = nmf_seed, ...)
+    nmf_results <- NMF::nmfEstimateRank(reduced_data, range = rank_range, nrun = nrun, seed = nmf_seed, ...)
     plot_values <- nmf_results$measures$cophenetic
   } else {
     for (i in 1:length(rank_range)) {
-      val <- FaStaNMF::fastanmf(data = data, rank = rank_range[i], nrun = nrun, mvg = mvg, nmf_seed = nmf_seed, cophenetic = TRUE, ...)
+      val <- aged::fastanmf(data = data, rank = rank_range[i], nrun = nrun, mvg = mvg, nmf_seed = nmf_seed, cophenetic = TRUE, ...)
       plot_values <- c(plot_values, val)
     }
   }
@@ -79,8 +88,8 @@ cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, mvg = 1000,
     if (length(max_ccc) > 1) {
       max_ccc <- max_ccc[1]
     }
-    if (all(diff(rank_range) == 1)) {
-      first_pos <- which(diff(df2$cophenetic) > 0)[1]
+    first_pos <- which(diff(df2$cophenetic) > 0)[1]
+    if (all(diff(rank_range) == 1) || first_pos == 1) {
       if (is.na(first_pos)) {
         subset_coph <- diff(df2$cophenetic)
       } else {

@@ -48,9 +48,15 @@ aged <- function(data, rank, n = 25, nrun = 200, nmf_seed = 123456, mvg = 1000, 
       data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
       
       # Prevents conflicts between the two different seed generics from NMF and SummarizedExperiment.
-      detach("package:DESeq2")
-      detach("package:SummarizedExperiment")
-      detach("package:DelayedArray")
+      if("DESeq2" %in% (.packages())){
+         detach("package:DESeq2", unload=TRUE) 
+      }
+      if("SummarizedExperiment" %in% (.packages())){
+         detach("package:SummarizedExperiment", unload=TRUE) 
+      }
+      if("DelayedArray" %in% (.packages())){
+         detach("package:DelayedArray", unload=TRUE) 
+      }
    } else if (transformation == 1) {
       print("Applying a log transformation...")
       data <- log1p(data)
@@ -58,7 +64,7 @@ aged <- function(data, rank, n = 25, nrun = 200, nmf_seed = 123456, mvg = 1000, 
    
    # Start NMF
    print(paste("Starting FaStaNMF with rank ",rank,"...", sep = ""))
-   nmf_object <- FaStaNMF::fastanmf(data, rank = rank, nrun = nrun, nmf_seed = nmf_seed, mvg = mvg, ...)
+   nmf_object <- aged::fastanmf(data, rank = rank, nrun = nrun, nmf_seed = nmf_seed, mvg = mvg, ...)
    h <- nmf_object@fit@H
    w <- nmf_object@fit@W
    col_sums <- colSums(w)
@@ -95,12 +101,12 @@ aged <- function(data, rank, n = 25, nrun = 200, nmf_seed = 123456, mvg = 1000, 
       }
    }
    metagene_list <- list()
-   metagene_list[[1]] <- nmf_object
-   names(metagene_list)[[1]] <- "nmf_object"
    for (i in 1:ncol(differenceMatrix)) {
       differenceMatrix <- differenceMatrix[order(differenceMatrix[,i], decreasing = TRUE),]
-      metagene_list[[i + 1]] <- differenceMatrix[,i][1:n]
-      names(metagene_list)[[i + 1]] <- paste0("metagene", as.character(i))
+      metagene_list[[i]] <- differenceMatrix[,i][1:n]
+      names(metagene_list)[[i]] <- paste0("metagene", as.character(i))
    }
+   metagene_list[[rank + 1]] <- nmf_object
+   names(metagene_list)[[rank + 1]] <- "nmf_object"
    return(metagene_list)
 }

@@ -47,9 +47,15 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
   if (transformation_type == "vst") {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
+    if("DESeq2" %in% (.packages())){
+      detach("package:DESeq2", unload=TRUE) 
+    }
+    if("SummarizedExperiment" %in% (.packages())){
+      detach("package:SummarizedExperiment", unload=TRUE) 
+    }
+    if("DelayedArray" %in% (.packages())){
+      detach("package:DelayedArray", unload=TRUE) 
+    }
   } else if (transformation_type == "log") {
     print("Applying a log transformation...")
     data <- log1p(data)
@@ -57,9 +63,9 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
   
   # Pull NMF results and find proper metagene for selected gene
   rank <- length(aged_results) - 1
-  w <- aged_results$w
-  h <- aged_results$h
-  wh <- (aged_results$w %*% aged_results$h)
+  w <- aged_results$nmf_object@fit@W
+  h <- aged_results$nmf_object@fit@H
+  wh <- (w %*% h)
   if (!any(row.names(data) == gene)) {
     stop(paste("No gene",gene,"was found inside of the dataset.", sep = " "))
   }
@@ -88,7 +94,7 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
   df2 <- t(df2)
   df2 <- as.data.frame(df2)
   colnames(df2) <- c("original", "chosen")
-  return(df2)
+  
   g <- qplot(x = chosen, y = original, data = df2, xlab = x_lab, ylab = paste(gene,"Values, Original Dataset", sep = " "), shape = shape, color = color, geom = c("point")) + theme_pubr()
   if (reg == TRUE) {
     g <- g + geom_smooth(color = reg_color, method='lm', formula=y~x, aes(group = 1), se = FALSE)

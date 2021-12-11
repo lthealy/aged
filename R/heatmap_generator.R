@@ -68,9 +68,15 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
   if (transformation_type == "vst") {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
+    if("DESeq2" %in% (.packages())){
+      detach("package:DESeq2", unload=TRUE) 
+    }
+    if("SummarizedExperiment" %in% (.packages())){
+      detach("package:SummarizedExperiment", unload=TRUE) 
+    }
+    if("DelayedArray" %in% (.packages())){
+      detach("package:DelayedArray", unload=TRUE) 
+    }
   } else if (transformation_type == "log") {
     print("Applying a log transformation...")
     data <- log1p(data)
@@ -83,7 +89,7 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
   df[,1] <- rn
   colnames(df) <- c("genes", "metagenes")
   for (i in 1:rank) {
-    nms <- names(aged_results[[i]][[1]])
+    nms <- names(aged_results[[i]])
     for (m in 1:(length(nms))) {
       index <- match(nms[m], df[,1])
       df[index, 2] <- i

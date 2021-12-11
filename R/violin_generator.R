@@ -45,18 +45,24 @@ violin_generator <- function(aged_results, data, batch, batch_order = names(tabl
   if (transformation_type == "vst") {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
-    detach("package:DESeq2")
-    detach("package:SummarizedExperiment")
-    detach("package:DelayedArray")
+    if("DESeq2" %in% (.packages())){
+      detach("package:DESeq2", unload=TRUE) 
+    }
+    if("SummarizedExperiment" %in% (.packages())){
+      detach("package:SummarizedExperiment", unload=TRUE) 
+    }
+    if("DelayedArray" %in% (.packages())){
+      detach("package:DelayedArray", unload=TRUE) 
+    }
   } else if (transformation_type == "log") {
     print("Applying a log transformation...")
     data <- log1p(data)
   }
   
   rank <- length(aged_results) - 1
-  n <- length(aged_results[[1]][[1]])
+  n <- length(aged_results[[2]])
   for (i in 1:rank) {
-    n <- max(length(aged_results[[i]][[1]]))
+    n <- max(length(aged_results[[i]]))
   }
   rank_string <- paste("rank",rank,"_ibd",sep="")
   batches <- table(batch)
@@ -66,7 +72,7 @@ violin_generator <- function(aged_results, data, batch, batch_order = names(tabl
     assign(paste("treatment_matrix_",i,sep=""), df)
   }
   for (i in 1:rank) {
-    desired_vector <- aged_results[[i]][[1]]
+    desired_vector <- aged_results[[i]]
     desired_vector_names <- names(desired_vector)
     metagene_matrix <- data[rownames(data) %in% desired_vector_names[1:n],]
     metagene_matrix_column_means <- colMeans(metagene_matrix)
