@@ -4,7 +4,7 @@ Title: Automatic Gene Expression Deconvolution Using NMF & GSEA
 Version: 0.1.0
 Author: Michael Sweeney, Luke Torre-Healy, Alisa Yurovsky, Richard Moffitt
 Maintainer: Richard Moffitt <richard.moffitt@stonybrookmedicine.edu>
-Description: Using non-negative matrix factorization and gene set enrichment analysis, AGED will perform gene expression deconvolution on a matrix-like object of gene expression. The AGED package also has specific visualization tools to help make sense of results.
+Description: Using fast and stable non-negative matrix factorization, AGED will perform gene expression deconvolution on a matrix-like object of gene expression. The AGED package also has specific visualization tools to help make sense of results.
 License: MIT
 Encoding: UTF-8
 LazyData: true
