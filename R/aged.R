@@ -37,7 +37,7 @@ aged <- function(data, rank, n = 25, nrun = 200, nmf_seed = 123456, mvg = 1000, 
    }
    
    # Clear low variance if desired.
-   if (clv != 0) {
+   if (clv > 0) {
       print("Clearing low variance...")
       data <- data[apply(data, 1, var) > clv,]
    }

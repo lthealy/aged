@@ -12,9 +12,9 @@
 #' 
 #' @param var_axis A string representing the desired value to be printed on the axis representing the categorization/batch set by \code{batch}. Defaults to "treatment".
 #' 
-#' @param clear_low_variance A boolean variable that determines whether rows with var < 1 are removed or not. This is done before any type of transformation is performed.
+#' @param clv A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.
 #' 
-#' @param transformation_type A string variable that determines whether or not a log or VST transformation should be done on the original data. If this argument is used, it should be "vst" or "log" only. If no transformation is to be performed, the default value or any string other than "vst" or "log" can be used.
+#' @param transformation A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.
 #' 
 #' @param blind If a VST is to be done, this boolean value determines whether it is blind or not.
 #' 
@@ -34,15 +34,19 @@
 #' @import ggbeeswarm
 #' @import DESeq2
 
-violin_generator <- function(aged_results, data, batch, batch_order = names(table(batch)), var_axis = "treatment", clear_low_variance = F, transformation_type = "", blind = TRUE, nrow = 2, scales_free = "fixed", beeswarm_size = 1, beeswarm_color = "black") {
+violin_generator <- function(aged_results, data, batch, batch_order = names(table(batch)), var_axis = "treatment", clv = 0, transformation = 0, blind = TRUE, nrow = 2, scales_free = "fixed", beeswarm_size = 1, beeswarm_color = "black") {
   if (is.null(rownames(data))) {
     stop("The data must have row names for AGED to run properly. Please verify that your data has proper row names before continuing.")
   }
-  if (clear_low_variance == TRUE) {
+  
+  # Clear low variance if desired
+  if (clv > 0) {
     print("Clearing low variance...")
-    data <- data[apply(data, 1, var) > 1,]
+    data <- data[apply(data, 1, var) > clv,]
   }
-  if (transformation_type == "vst") {
+  
+  # Perform desired transformation
+  if (transformation == 2) {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
     if("DESeq2" %in% (.packages())){
@@ -54,7 +58,7 @@ violin_generator <- function(aged_results, data, batch, batch_order = names(tabl
     if("DelayedArray" %in% (.packages())){
       detach("package:DelayedArray", unload=TRUE) 
     }
-  } else if (transformation_type == "log") {
+  } else if (transformation == 1) {
     print("Applying a log transformation...")
     data <- log1p(data)
   }

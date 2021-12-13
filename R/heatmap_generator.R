@@ -10,9 +10,9 @@
 #' 
 #' @param batches A string vector that details the tracks of characteristics to outline on the heatmap. Each element of the string vector must correspond to a column name of samp_info.
 #' 
-#' @param clear_low_variance A boolean variable that determines whether rows with var < 1 are removed or not. This is done before any type of transformation is performed.
+#' @param clv A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.
 #' 
-#' @param transformation_type A string variable that determines whether or not a log or VST transformation should be done on the original data. If this argument is used, it should be "vst" or "log" only. If no transformation is to be performed, the default value or any string other than "vst" or "log" can be used.
+#' @param transformation A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.
 #' 
 #' @param blind If a VST is to be done, this boolean value determines whether it is blind or not.
 #' 
@@ -51,7 +51,7 @@
 #' @import DESeq2
 #' @import bioDist
 
-heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clear_low_variance = FALSE, transformation_type = "", blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, hmap_color = "skyblue", dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
+heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clv = 0, transformation_type = 0, blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, hmap_color = "skyblue", dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
   
   # Verify and prepare data
   if (is.null(rownames(data))) {
@@ -59,13 +59,13 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
   }
   
   # Clear low variance
-  if (clear_low_variance == TRUE) {
+  if (clv > 0) {
     print("Clearing low variance...")
-    data <- data[apply(data, 1, var) > 1,]
+    data <- data[apply(data, 1, var) > clv,]
   }
   
   # Requested transformation
-  if (transformation_type == "vst") {
+  if (transformation == 2) {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
     if("DESeq2" %in% (.packages())){
@@ -77,7 +77,7 @@ heatmap_generator <- function(aged_results, data, samp_info, batches = names(sam
     if("DelayedArray" %in% (.packages())){
       detach("package:DelayedArray", unload=TRUE) 
     }
-  } else if (transformation_type == "log") {
+  } else if (transformation == 1) {
     print("Applying a log transformation...")
     data <- log1p(data)
   }

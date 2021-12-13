@@ -39,7 +39,7 @@ cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, mvg = 1000,
   }
   
   # Clear low variance if desired
-  if (clv != 0) {
+  if (clv > 0) {
     print("Clearing low variance...")
     data <- data[apply(data, 1, var) > clv,]
   }

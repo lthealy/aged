@@ -8,9 +8,9 @@
 #'
 #' @param gene A string value perfectly corresponding to a row value of the original dataset, representing a gene name.
 #' 
-#' @param clear_low_variance A boolean variable that determines whether or not rows with variance less than 1 should be removed from the original dataset.
+#' @param clv A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.
 #' 
-#' @param transformation_type A string variable that determines whether or not a log or VST transformation should be done on the original dataset. If this argument is intended to be used to perform a transformation, it should be "vst" or "log" only.
+#' @param transformation A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.
 #' 
 #' @param blind If a VST is to be done, this boolean value determines whether it is blind or not.
 #' 
@@ -36,15 +36,21 @@
 #' @import ggplot2
 #' @import ggbeeswarm
 
-scatterplot_generator <- function(aged_results, data, gene, clear_low_variance = FALSE, transformation_type = "", blind = TRUE, x_axis = "wh", color = NULL, shape = NULL, reg = TRUE, reg_color = "black", xy = TRUE, xy_color = "gray", ellipse = TRUE) {
+scatterplot_generator <- function(aged_results, data, gene, clv = 0, transformation = 0, blind = TRUE, x_axis = "wh", color = NULL, shape = NULL, reg = TRUE, reg_color = "black", xy = TRUE, xy_color = "gray", ellipse = TRUE) {
   
   # Validate data
   if (is.null(rownames(data))) {
     stop("The dataset must have row names for AGED to run properly. Please verify that your dataset has proper row names before continuing.")
   }
   
+  # Clear low variance if desired
+  if (clv > 0) {
+    print("Clearing low variance...")
+    data <- data[apply(data, 1, var) > clv,]
+  }
+  
   # Perform desired transformation
-  if (transformation_type == "vst") {
+  if (transformation == 2) {
     print("Applying a variance-stabilizing transformation...")
     data <- DESeq2::varianceStabilizingTransformation(data, blind = blind)
     if("DESeq2" %in% (.packages())){
@@ -56,7 +62,7 @@ scatterplot_generator <- function(aged_results, data, gene, clear_low_variance =
     if("DelayedArray" %in% (.packages())){
       detach("package:DelayedArray", unload=TRUE) 
     }
-  } else if (transformation_type == "log") {
+  } else if (transformation == 1) {
     print("Applying a log transformation...")
     data <- log1p(data)
   }
