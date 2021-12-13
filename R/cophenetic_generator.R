@@ -93,7 +93,11 @@ cophenetic_generator <- function(data, rank_range = 2:20, nrun = 12, mvg = 1000,
       if (is.na(first_pos)) {
         subset_coph <- diff(df2$cophenetic)
       } else {
-        subset_coph <- diff(df2$cophenetic)[1:first_pos - 1]
+        if (first_pos <= 1) {
+          subset_coph <- diff(df2$cophenetic)[1]
+        } else {
+          subset_coph <- diff(df2$cophenetic)[1:first_pos - 1]
+        }
       }
       subset_coph <- subset_coph * -1
       slope_drop_index <- which(subset_coph==max(subset_coph))
