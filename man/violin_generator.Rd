@@ -10,8 +10,8 @@ violin_generator(
   batch,
   batch_order = names(table(batch)),
   var_axis = "treatment",
-  clear_low_variance = F,
-  transformation_type = "",
+  clv = 0,
+  transformation = 0,
   blind = TRUE,
   nrow = 2,
   scales_free = "fixed",
@@ -30,9 +30,9 @@ violin_generator(
 
 \item{var_axis}{A string representing the desired value to be printed on the axis representing the categorization/batch set by \code{batch}. Defaults to "treatment".}
 
-\item{clear_low_variance}{A boolean variable that determines whether rows with var < 1 are removed or not. This is done before any type of transformation is performed.}
+\item{clv}{A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.}
 
-\item{transformation_type}{A string variable that determines whether or not a log or VST transformation should be done on the original data. If this argument is used, it should be "vst" or "log" only. If no transformation is to be performed, the default value or any string other than "vst" or "log" can be used.}
+\item{transformation}{A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.}
 
 \item{blind}{If a VST is to be done, this boolean value determines whether it is blind or not.}
 

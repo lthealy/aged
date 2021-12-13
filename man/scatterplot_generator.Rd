@@ -8,8 +8,8 @@ scatterplot_generator(
   aged_results,
   data,
   gene,
-  clear_low_variance = FALSE,
-  transformation_type = "",
+  clv = 0,
+  transformation = 0,
   blind = TRUE,
   x_axis = "wh",
   color = NULL,
@@ -28,9 +28,9 @@ scatterplot_generator(
 
 \item{gene}{A string value perfectly corresponding to a row value of the original dataset, representing a gene name.}
 
-\item{clear_low_variance}{A boolean variable that determines whether or not rows with variance less than 1 should be removed from the original dataset.}
+\item{clv}{A numerical value \code{x} that reduces the dataset by removing genes with variance < \code{x} across all samples. Our recommended value is to set this parameter to 1 if genes expression low variance across samples is desired. These genes will not be considered at all for the deconvolution. This is done before any type of transformation or other reduction is performed.}
 
-\item{transformation_type}{A string variable that determines whether or not a log or VST transformation should be done on the original dataset. If this argument is intended to be used to perform a transformation, it should be "vst" or "log" only.}
+\item{transformation}{A numerical value that determines whether or not a log or VST transformation should be done on the original dataset. A value of 0 indicates no transformation, a value of 1 indicates a log transformation using \link[base]{log1p}, a value of 2 indicates a VST transformation using \link[DESeq2]{varianceStabilizingTransformation} If this argument is used, it should be "0", "1" or "2" only. Any other value will assume no transformation. For FaStaNMF, untransformed data should be log-transformed or VST-transformed.}
 
 \item{blind}{If a VST is to be done, this boolean value determines whether it is blind or not.}
 
