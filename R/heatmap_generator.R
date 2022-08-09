@@ -51,7 +51,7 @@
 #' @import DESeq2
 #' @import bioDist
 
-heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clv = 0, transformation_type = 0, blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, hmap_color = "skyblue", dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
+heatmap_generator <- function(aged_results, data, samp_info, batches = names(samp_info), clv = 0, transformation_type = 0, blind = TRUE, pearson = FALSE, specific_order = NULL, legend = TRUE, hmap_color = c("white", "skyblue", "black"), dendrogram = "none", trace = "none", scale = "row", cexRow = 0.5, key = FALSE, lhei = c(1,3), lwid = c(2,3), legend_size = 0.75, legend_space = 1, ...) {
   
   # Verify and prepare data
   if (is.null(rownames(data))) {
